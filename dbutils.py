@@ -45,6 +45,7 @@ def insert(cursor, table, cols, vals):
 
 def with_db(dbcfg):
     def db_call(f):
+        @wraps(f)
         def db_wrap(*args, **kwargs):
             with Database(**dbcfg) as db:
                 f(db, *args, **kwargs)
