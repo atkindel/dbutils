@@ -6,6 +6,7 @@
 # Date: 28 August 2016
 
 import MySQLdb
+import MySQLdb.cursors
 from functools import wraps
 
 class Database(object):
@@ -14,7 +15,7 @@ class Database(object):
         self.username = username
         self.password = password
         self.db = db
-        self.connection = MySQLdb.connect(host=host, port=port, user=username, passwd=password, db=db)
+        self.connection = MySQLdb.connect(host=host, port=port, user=username, passwd=password, db=db, cursorclass=MySQLdb.cursors.DictCursor)
         self.connection.autocommit(True)
         self.cursors = []
 
@@ -29,14 +30,13 @@ class Database(object):
         self.connection.close()
 
 
-def query(cursor, query):
+def query(cursor, query, fetchall=False):
     cursor.execute(query)
-    while True:
-        result = cursor.fetchone()
-        if not result:
-            cursor.close()
-            return
-        yield result
+    results = cursor.fetchall()
+    if fetchall:
+        return results
+    else:
+        return (row for row in results)
 
 def insert(cursor, table, cols, vals):
     query = "INSERT INTO %s (`%s`) VALUES ('%s')" % (table, "`,`".join(cols), "','".join(vals))
@@ -48,7 +48,7 @@ def with_db(dbcfg):
         @wraps(f)
         def db_wrap(*args, **kwargs):
             with Database(**dbcfg) as db:
-                f(db, *args, **kwargs)
+                return f(db, *args, **kwargs)
         return db_wrap
     return db_call
 
