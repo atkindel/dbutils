@@ -68,6 +68,7 @@ def dev_only(f):
             return f(*args, **kwargs)
         else:
             raise InstanceException("Method is disabled for instances not in development.")
+    return dev_wrap
 
 
 
