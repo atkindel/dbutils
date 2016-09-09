@@ -53,6 +53,23 @@ def with_db(dbcfg):
     return db_call
 
 
+class InstanceException(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+
+def dev_only(f):
+    @wraps(f)
+    def dev_wrap(*args, **kwargs):
+        if DEV_INSTANCE:
+            return f(*args, **kwargs)
+        else:
+            raise InstanceException("Method is disabled for instances not in development.")
+
+
 
 if __name__ == '__main__':
 
